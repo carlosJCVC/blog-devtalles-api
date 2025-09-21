@@ -33,16 +33,16 @@ export interface PostsRepositoryInterface {
   findScheduled(): Promise<PostEntity[]>;
 
   findByAuthor(
-    authorId: string,
+    authorId: number,
     options?: QueryOptions,
   ): Promise<PaginatedResponse<PostEntity>>;
 
-  countByAuthor(authorId: string): Promise<number>;
+  countByAuthor(authorId: number): Promise<number>;
 
-  countByAuthorAndStatus(authorId: string, status: PostStatus): Promise<number>;
+  countByAuthorAndStatus(authorId: number, status: PostStatus): Promise<number>;
 
   findByCategory(
-    categoryId: string,
+    categoryId: number,
     options?: QueryOptions,
   ): Promise<PaginatedResponse<PostEntity>>;
 
@@ -61,15 +61,15 @@ export interface PostsRepositoryInterface {
 
   exists(id: number): Promise<boolean>;
 
-  existsBySlug(slug: string, excludeId?: string): Promise<boolean>;
+  existsBySlug(slug: string, excludeId?: number): Promise<boolean>;
 
   count(filters?: PostFilters): Promise<number>;
 
-  bulkUpdateStatus(ids: string[], status: PostStatus): Promise<void>;
+  bulkUpdateStatus(ids: number[], status: PostStatus): Promise<void>;
 
-  delete(id: string): Promise<void>;
+  delete(id: number): Promise<void>;
 
-  bulkDelete(ids: string[]): Promise<void>;
+  bulkDelete(ids: number[]): Promise<void>;
 
-  softDelete(id: string): Promise<void>;
+  softDelete(id: number): Promise<void>;
 }

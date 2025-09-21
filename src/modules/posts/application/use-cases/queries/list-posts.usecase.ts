@@ -47,8 +47,10 @@ export class ListPostsUseCase {
       // Default: get published posts with filters
       const filters = this.buildFilters(query);
       return await this.getFilteredPosts(filters, options);
-    } catch (error) {
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
       this.logger.error(`Failed to list posts: ${error.message}`, error.stack);
+
       throw error;
     }
   }

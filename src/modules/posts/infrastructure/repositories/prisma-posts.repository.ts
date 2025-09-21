@@ -156,25 +156,25 @@ export class PrismaPostsRepository implements PostsRepositoryInterface {
   }
 
   findByAuthor(
-    authorId: string,
+    authorId: number,
     options?: QueryOptions,
   ): Promise<PaginatedResponse<PostEntity>> {
     throw new Error('Method not implemented.');
   }
 
-  countByAuthor(authorId: string): Promise<number> {
+  countByAuthor(authorId: number): Promise<number> {
     throw new Error('Method not implemented.');
   }
 
   countByAuthorAndStatus(
-    authorId: string,
+    authorId: number,
     status: PostStatus,
   ): Promise<number> {
     throw new Error('Method not implemented.');
   }
 
   findByCategory(
-    categoryId: string,
+    categoryId: number,
     options?: QueryOptions,
   ): Promise<PaginatedResponse<PostEntity>> {
     throw new Error('Method not implemented.');
@@ -369,7 +369,7 @@ export class PrismaPostsRepository implements PostsRepositoryInterface {
     }
   }
 
-  async existsBySlug(slug: string, excludeId?: string): Promise<boolean> {
+  async existsBySlug(slug: string, excludeId?: number): Promise<boolean> {
     try {
       const where: any = {
         slug,
@@ -397,19 +397,19 @@ export class PrismaPostsRepository implements PostsRepositoryInterface {
     throw new Error('Method not implemented.');
   }
 
-  bulkUpdateStatus(ids: string[], status: PostStatus): Promise<void> {
+  bulkUpdateStatus(ids: number[], status: PostStatus): Promise<void> {
     throw new Error('Method not implemented.');
   }
 
-  delete(id: string): Promise<void> {
+  delete(id: number): Promise<void> {
     throw new Error('Method not implemented.');
   }
 
-  bulkDelete(ids: string[]): Promise<void> {
+  bulkDelete(ids: number[]): Promise<void> {
     throw new Error('Method not implemented.');
   }
 
-  softDelete(id: string): Promise<void> {
+  softDelete(id: number): Promise<void> {
     throw new Error('Method not implemented.');
   }
 
