@@ -6,14 +6,14 @@ const VALID_SORT_FIELDS = SortFieldTransformer.getValidFields();
 const uuidSchema = z.uuid('Invalid UUID format');
 
 const paginationSchema = z.object({
-  page: z
+  page: z.coerce
     .number()
     .int('Page must be an integer')
     .min(1, 'Page must be at least 1')
     .optional()
     .default(1),
 
-  limit: z
+  limit: z.coerce
     .number()
     .int('Limit must be an integer')
     .min(1, 'Limit must be at least 1')
@@ -31,10 +31,10 @@ const paginationSchema = z.object({
 
 export const postQuerySchema = paginationSchema.extend({
   status: z.enum(PostStatus).optional(),
-  authorId: uuidSchema.optional(),
-  categoryId: uuidSchema.optional(),
+  authorId: z.coerce.number().int().positive().optional(),
+  categoryId: z.number().int().positive().optional(),
   categorySlug: z.string().optional(),
-  tagId: uuidSchema.optional(),
+  tagId: z.number().int().positive().optional().optional(),
   tagSlug: z.string().optional(),
   dateFrom: z.iso.datetime().optional(),
   dateTo: z.iso.datetime().optional(),
