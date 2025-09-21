@@ -32,9 +32,9 @@ const paginationSchema = z.object({
 export const postQuerySchema = paginationSchema.extend({
   status: z.enum(PostStatus).optional(),
   authorId: z.coerce.number().int().positive().optional(),
-  categoryId: z.number().int().positive().optional(),
+  categoryId: z.coerce.number().int().positive().optional(),
   categorySlug: z.string().optional(),
-  tagId: z.number().int().positive().optional().optional(),
+  tagId: z.coerce.number().int().positive().optional().optional(),
   tagSlug: z.string().optional(),
   dateFrom: z.iso.datetime().optional(),
   dateTo: z.iso.datetime().optional(),

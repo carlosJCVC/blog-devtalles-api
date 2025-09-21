@@ -55,8 +55,8 @@ const datesForStatus = (status: PostStatus) => {
     case PostStatus.DRAFT:
     default:
       return {
-        published_at: null as Date | null,
-        scheduled_at: null as Date | null,
+        publishedAt: null as Date | null,
+        scheduledAt: null as Date | null,
       };
   }
 };
@@ -164,8 +164,8 @@ const seedPosts = async (
       '\n\n',
     );
     const status = randomStatus();
-    const { published_at, scheduled_at } = datesForStatus(status);
-    const author_id = authorPool[Math.floor(Math.random() * authorPool.length)];
+    const { publishedAt, scheduledAt } = datesForStatus(status);
+    const authorId = authorPool[Math.floor(Math.random() * authorPool.length)];
 
     // Métricas coherentes
     const views = faker.number.int({ min: 0, max: 8000 });
@@ -175,8 +175,8 @@ const seedPosts = async (
     });
     const comments = faker.number.int({ min: 0, max: Math.floor(likes * 0.4) });
 
-    const is_featured = Math.random() < 0.25 ? true : false;
-    const featured_image_url = `https://picsum.photos/seed/${slug}/960/540`;
+    const isFeatured = Math.random() < 0.25 ? true : false;
+    const featuredImageUrl = `https://picsum.photos/seed/${slug}/960/540`;
 
     const post = await prisma.post.upsert({
       where: { slug },
@@ -184,28 +184,28 @@ const seedPosts = async (
         title,
         content,
         status,
-        published_at,
-        scheduled_at,
-        author_id,
-        is_featured,
-        featured_image_url,
-        views_count: views,
-        likes_count: likes,
-        comments_count: comments,
+        publishedAt,
+        scheduledAt,
+        authorId,
+        isFeatured,
+        featuredImageUrl,
+        viewsCount: views,
+        likesCount: likes,
+        commentsCount: comments,
       },
       create: {
         title,
         slug,
         content,
         status,
-        published_at,
-        scheduled_at,
-        author_id,
-        is_featured,
-        featured_image_url,
-        views_count: views,
-        likes_count: likes,
-        comments_count: comments,
+        publishedAt,
+        scheduledAt,
+        authorId,
+        isFeatured,
+        featuredImageUrl,
+        viewsCount: views,
+        likesCount: likes,
+        commentsCount: comments,
       },
     });
 

@@ -11,8 +11,6 @@ import {
 import { PostsService } from '../../application/services/posts.service';
 import type { Request as Req } from 'express';
 import { ZodQuery } from '@src/common/decorators/zod-query.decorator';
-import { PostListResponseDto } from '../../application/dtos/responses/post-list.response.dto';
-import { PostStatus } from '../../domain/enums/post-status.enum';
 import { PostMapper } from '../../application/mappers/post.mapper';
 import {
   type CreatePostPayload,
@@ -28,11 +26,12 @@ import type {
   PostQuery,
   SearchPostQuery,
 } from '../../application/validation/schemas/post-query.schemas';
-import { PostResponseDto } from '../../application/dtos/responses/post.response.dto';
 import {
   idNumberSchema,
   slugSchema,
 } from '../../application/validation/schemas/param.schemas';
+import { PostListResponseDto } from '../../application/dtos/responses/post-list-response.dto';
+import { PostDto } from '../../application/dtos/post.dto';
 
 interface AppRequest extends Req {
   user?: { id: string | number };
@@ -51,7 +50,7 @@ export class PostsController {
   ): Promise<PostListResponseDto> {
     this.logger.log(`GET /posts - Query: ${JSON.stringify(query)}`);
 
-    const publicQuery = { ...query, status: PostStatus.PUBLISHED };
+    const publicQuery = { ...query };
 
     const result = await this.postsService.listPosts(publicQuery);
 
@@ -92,7 +91,7 @@ export class PostsController {
   async getPostBySlug(
     @ZodParam('slug', slugSchema) slug: string,
     @Request() req: AppRequest,
-  ): Promise<PostResponseDto> {
+  ): Promise<PostDto> {
     this.logger.log(`GET /posts/${slug}`);
 
     // Extract viewer info for analytics
@@ -128,7 +127,7 @@ export class PostsController {
   async createPost(
     @ZodBody(createPostSchema) payload: CreatePostPayload,
     @Request() req: AppRequest,
-  ): Promise<PostResponseDto> {
+  ): Promise<PostDto> {
     // For now, mock the author ID - replace with real auth
     const authorId = req.user?.id || 2;
 

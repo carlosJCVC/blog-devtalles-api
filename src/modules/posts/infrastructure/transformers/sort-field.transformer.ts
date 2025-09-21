@@ -1,15 +1,15 @@
 export class SortFieldTransformer {
   private static readonly FIELD_MAPPING: Record<string, string> = {
-    createdAt: 'created_at',
-    updatedAt: 'updated_at',
-    publishedAt: 'published_at',
-    scheduledAt: 'scheduled_at',
-    featuredImageUrl: 'featured_image_url',
-    viewsCount: 'views_count',
-    likesCount: 'likes_count',
-    commentsCount: 'comments_count',
-    allowComments: 'allow_comments',
-    authorId: 'author_id',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt',
+    publishedAt: 'publishedAt',
+    scheduledAt: 'scheduledAt',
+    featuredImageUrl: 'featuredImageUrl',
+    viewsCount: 'viewsCount',
+    likesCount: 'likesCount',
+    commentsCount: 'commentsCount',
+    allowComments: 'allowComments',
+    authorId: 'authorId',
 
     // Fields that don't change
     title: 'title',

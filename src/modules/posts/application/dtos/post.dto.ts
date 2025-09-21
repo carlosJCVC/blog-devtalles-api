@@ -1,8 +1,8 @@
-import { AuthorResponseDto } from './author.response.dto';
-import { CategoryResponseDto } from './category.response.dto';
-import { TagResponseDto } from './tag.response.dto';
+import { AuthorDto } from './author.dto';
+import { CategoryDto } from './category.dto';
+import { TagDto } from './tag.dto';
 
-export class PostResponseDto {
+export class PostDto {
   id: number;
 
   title: string;
@@ -19,11 +19,11 @@ export class PostResponseDto {
 
   scheduledAt?: Date | string;
 
-  author?: AuthorResponseDto;
+  author?: AuthorDto;
 
-  categories?: CategoryResponseDto[];
+  categories?: CategoryDto[];
 
-  tags?: TagResponseDto[];
+  tags?: TagDto[];
 
   viewsCount: number;
 

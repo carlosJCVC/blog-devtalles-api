@@ -59,6 +59,8 @@ export interface PostsRepositoryInterface {
 
   findMostLiked(options?: PopularityOptions): Promise<PostEntity[]>;
 
+  update(post: PostEntity): Promise<boolean>;
+
   exists(id: number): Promise<boolean>;
 
   existsBySlug(slug: string, excludeId?: number): Promise<boolean>;

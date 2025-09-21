@@ -1,4 +1,4 @@
-export class TagResponseDto {
+export class TagDto {
   id: string;
 
   name: string;

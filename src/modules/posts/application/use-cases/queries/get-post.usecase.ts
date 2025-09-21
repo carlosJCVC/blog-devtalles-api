@@ -11,7 +11,6 @@ import {
 import { PostNotFoundException } from '@src/modules/posts/domain/exceptions';
 import type { PostsRepositoryInterface } from '@src/modules/posts/domain/repositories';
 import { POSTS_REPOSITORY_TOKEN } from '@src/modules/posts/domain/repositories/posts.repository.interface';
-import { PostMapper } from '../../mappers/post.mapper';
 
 @Injectable()
 export class GetPostUseCase {
@@ -44,7 +43,7 @@ export class GetPostUseCase {
 
     try {
       // Try to find by ID first, then by slug
-      let post;
+      let post: PostEntity | null;
       if (typeof identifier === 'number') {
         const id = Number(identifier);
         post = await this.postsRepository.findById(id);
@@ -56,14 +55,12 @@ export class GetPostUseCase {
         throw new PostNotFoundException(identifier);
       }
 
-      const postEntity = PostMapper.fromPrisma(post);
-
       // Increment views if requested (typically for public views)
       if (incrementViews) {
-        await this.handleViewIncrement(postEntity, viewerInfo);
+        await this.handleViewIncrement(post, viewerInfo);
       }
 
-      return postEntity;
+      return post;
     } catch (err) {
       if (err instanceof PostNotFoundException) {
         throw err;
@@ -78,17 +75,15 @@ export class GetPostUseCase {
 
   private async handleViewIncrement(
     post: PostEntity,
-    viewerInfo?: any,
+    viewerInfo?: ViewerInfo,
   ): Promise<void> {
     // Increment view count in domain entity
     post.incrementViews();
 
     // Save updated post
-    await this.postsRepository.create(post);
+    await this.postsRepository.update(post);
 
     // Emit view event for analytics
     // PostViewedEvent HERE with viewer info
-
-    // await this.eventBus.publish(viewEvent);
   }
 }

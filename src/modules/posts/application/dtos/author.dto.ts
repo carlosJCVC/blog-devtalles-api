@@ -1,4 +1,4 @@
-export class AuthorResponseDto {
+export class AuthorDto {
   id: number;
 
   username: string;

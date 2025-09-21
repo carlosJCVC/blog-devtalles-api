@@ -18,7 +18,7 @@ export class GetPostsByAuthorUseCase {
   ) {}
 
   async execute(
-    authorId: string,
+    authorId: number,
     page: number = 1,
     limit: number = 10,
     includeDrafts: boolean = false,

@@ -16,7 +16,7 @@ export class PostValidator {
    */
   async validateSlugUniqueness(
     slug: string,
-    excludePostId?: string,
+    excludePostId?: number,
   ): Promise<void> {
     const exists = await this.postsRepository.existsBySlug(slug, excludePostId);
     if (exists) {

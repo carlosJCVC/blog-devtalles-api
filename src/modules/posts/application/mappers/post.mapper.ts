@@ -1,15 +1,15 @@
-import { PostStatus as PrismaPostStatus, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { PostEntity } from '../../domain/entities/post.entity';
-import { PostResponseDto } from '../dtos/responses/post.response.dto';
-import { PostStatus } from '../../domain/enums/post-status.enum';
+import { PostDto } from '../dtos/post.dto';
+import { StatusMapper } from './status.mapper';
 
 export class PostMapper {
   /**
-   * Maps an AgreementDto to a Domain Agreement model.
-   * @param dto - The DTO object received from the API.
-   * @returns A Domain model object representing an Agreement.
+   * Maps an PostEntity to PostDto model.
+   * @param entity - The Entity.
+   * @returns A PostDto object representing an Post.
    */
-  static fromEntity(post: PostEntity): PostResponseDto {
+  static fromEntity(post: PostEntity): PostDto {
     return {
       id: post.id ?? 0,
       title: post.title,
@@ -51,9 +51,8 @@ export class PostMapper {
   static fromPrisma(
     prismaPost: Prisma.PostUncheckedCreateInput & { id: number },
   ): PostEntity {
-    const status = prismaPost.status as PrismaPostStatus;
-    const featuredImageUrl = prismaPost.featured_image_url
-      ? prismaPost.featured_image_url
+    const featuredImageUrl = prismaPost.featuredImageUrl
+      ? prismaPost.featuredImageUrl
       : undefined;
 
     const post = PostEntity.reconstitute({
@@ -61,18 +60,18 @@ export class PostMapper {
       title: prismaPost.title,
       content: prismaPost.content,
       slug: prismaPost.slug,
-      authorId: prismaPost.author_id,
-      status: 'SCHEDULED' as PostStatus,
-      publishedAt: parseDate(prismaPost.published_at),
-      scheduledAt: parseDate(prismaPost.scheduled_at),
+      authorId: prismaPost.authorId,
+      status: StatusMapper.fromPrisma(prismaPost.status),
+      publishedAt: parseDate(prismaPost.publishedAt),
+      scheduledAt: parseDate(prismaPost.scheduledAt),
       featuredImageUrl: featuredImageUrl,
-      viewsCount: prismaPost.views_count ? prismaPost.views_count : 0,
-      likesCount: prismaPost.likes_count ? prismaPost.likes_count : 0,
-      commentsCount: prismaPost.comments_count ? prismaPost.comments_count : 0,
+      viewsCount: prismaPost.viewsCount ? prismaPost.viewsCount : 0,
+      likesCount: prismaPost.likesCount ? prismaPost.likesCount : 0,
+      commentsCount: prismaPost.commentsCount ? prismaPost.commentsCount : 0,
       allowComments: true,
-      createdAt: parseDate(prismaPost.created_at) ?? new Date(),
-      updatedAt: parseDate(prismaPost.updated_at) ?? new Date(),
-      deletedAt: parseDate(prismaPost.deleted_at),
+      createdAt: parseDate(prismaPost.createdAt) ?? new Date(),
+      updatedAt: parseDate(prismaPost.updatedAt) ?? new Date(),
+      deletedAt: parseDate(prismaPost.deletedAt),
     });
 
     // Map categories and tags
@@ -98,16 +97,34 @@ export class PostMapper {
       slug: post.slug,
       content: post.content,
       status: post.toPrismaStatus,
-      author_id: post.authorId,
+      authorId: post.authorId,
 
-      published_at: post.publishedAt,
-      scheduled_at: post.scheduledAt,
-      featured_image_url: post.featuredImageUrl,
-      views_count: post.viewsCount,
-      likes_count: post.likesCount,
-      comments_count: post.likesCount,
+      publishedAt: post.publishedAt,
+      scheduledAt: post.scheduledAt,
+      featuredImageUrl: post.featuredImageUrl,
+      viewsCount: post.viewsCount,
+      likesCount: post.likesCount,
+      commentsCount: post.likesCount,
       // allow_comments: post.allowComments,
     };
+  }
+
+  static toUpdateInput(entity: PostEntity): Prisma.PostUncheckedUpdateInput {
+    const data: Prisma.PostUncheckedUpdateInput = {
+      title: entity.title,
+      slug: entity.slug,
+      content: entity.content,
+      status: entity.toPrismaStatus,
+      publishedAt: entity.publishedAt,
+      scheduledAt: entity.scheduledAt,
+      authorId: entity.authorId,
+      featuredImageUrl: entity.featuredImageUrl ?? null,
+      viewsCount: entity.viewsCount,
+      likesCount: entity.likesCount,
+      commentsCount: entity.commentsCount,
+    };
+
+    return data;
   }
 }
 

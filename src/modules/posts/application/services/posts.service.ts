@@ -97,7 +97,7 @@ export class PostsService {
   }
 
   async getPostsByAuthor(
-    authorId: string,
+    authorId: number,
     page: number = 1,
     limit: number = 10,
     includeDrafts: boolean = false,

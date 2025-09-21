@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import {
   PaginatedResponse,
   PopularityOptions,
@@ -8,11 +9,11 @@ import {
   SearchOptions,
 } from '../../domain/repositories';
 import { PostEntity } from '../../domain/entities/post.entity';
-import { PostStatus } from '../../domain/enums/post-status.enum';
+import { PostStatus, PostStatusVO } from '../../domain/enums/post-status.enum';
 import { PrismaService } from '@src/database/prisma.service';
 import { PostMapper } from '../../application/mappers/post.mapper';
 import { SortFieldTransformer } from '../transformers/sort-field.transformer';
-import { Prisma } from '@prisma/client';
+import { toError } from '@src/common/errors/to-error';
 
 @Injectable()
 export class PrismaPostsRepository implements PostsRepositoryInterface {
@@ -46,13 +47,14 @@ export class PrismaPostsRepository implements PostsRepositoryInterface {
       const post = await this.prisma.post.findFirst({
         where: {
           id,
-          deleted_at: null, // Only non-deleted posts
+          deletedAt: null, // Only non-deleted posts
         },
         // include: this.getIncludeOptions(),
       });
 
       return post ? PostMapper.fromPrisma(post) : null;
-    } catch (error) {
+    } catch (err) {
+      const error = toError(err);
       this.logger.error(
         `Failed to find post by ID: ${error.message}`,
         error.stack,
@@ -66,14 +68,14 @@ export class PrismaPostsRepository implements PostsRepositoryInterface {
       const post = await this.prisma.post.findFirst({
         where: {
           slug,
-          deleted_at: null,
+          deletedAt: null,
         },
         // include: this.getIncludeOptions(),
       });
 
       return post ? PostMapper.fromPrisma(post) : null;
     } catch (err) {
-      const error = err instanceof Error ? err : new Error(String(err));
+      const error = toError(err);
 
       this.logger.error(
         `Failed to find post by slug: ${error.message}`,
@@ -101,8 +103,8 @@ export class PrismaPostsRepository implements PostsRepositoryInterface {
       const [posts, total] = await Promise.all([
         this.prisma.post.findMany({
           where: {
-            status: status as any,
-            deleted_at: null,
+            status: PostStatusVO.create(status).toPrismaValue(),
+            deletedAt: null,
           },
           // include: this.getIncludeOptions() as never,
           orderBy: { [dbSortField]: sortOrder.toLowerCase() },
@@ -111,8 +113,8 @@ export class PrismaPostsRepository implements PostsRepositoryInterface {
         }),
         this.prisma.post.count({
           where: {
-            status: status as any,
-            deleted_at: null,
+            status: PostStatusVO.create(status).toPrismaValue(),
+            deletedAt: null,
           },
         }),
       ]);
@@ -129,11 +131,13 @@ export class PrismaPostsRepository implements PostsRepositoryInterface {
           hasPreviousPage: page > 1,
         },
       };
-    } catch (error) {
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
       this.logger.error(
         `Failed to find posts by status: ${error.message}`,
         error.stack,
       );
+
       throw error;
     }
   }
@@ -141,7 +145,7 @@ export class PrismaPostsRepository implements PostsRepositoryInterface {
   findPublished(
     options?: QueryOptions,
   ): Promise<PaginatedResponse<PostEntity>> {
-    throw new Error('Method not implemented.');
+    return this.findByStatus(PostStatus.PUBLISHED, options);
   }
 
   findDrafts(
@@ -155,11 +159,70 @@ export class PrismaPostsRepository implements PostsRepositoryInterface {
     throw new Error('Method not implemented.');
   }
 
-  findByAuthor(
+  async findByAuthor(
     authorId: number,
     options?: QueryOptions,
   ): Promise<PaginatedResponse<PostEntity>> {
-    throw new Error('Method not implemented.');
+    try {
+      const {
+        page = 1,
+        limit = 10,
+        sortBy = 'created_at',
+        sortOrder = 'DESC',
+      } = options || {};
+      const skip = (page - 1) * limit;
+
+      const [posts, total] = await Promise.all([
+        this.prisma.post.findMany({
+          where: {
+            authorId: authorId,
+            deletedAt: null,
+          },
+          // include: {
+          //   postCategories: {
+          //     include: {
+          //       category: true,
+          //     },
+          //   },
+          //   postTags: {
+          //     include: {
+          //       tag: true,
+          //     },
+          //   },
+          // },
+          orderBy: { [sortBy]: sortOrder.toLowerCase() },
+          skip,
+          take: limit,
+        }),
+        this.prisma.post.count({
+          where: {
+            authorId: authorId,
+            deletedAt: null,
+          },
+        }),
+      ]);
+
+      const totalPages = Math.ceil(total / limit);
+
+      return {
+        data: posts.map((post) => PostMapper.fromPrisma(post)),
+        meta: {
+          total: total | 0,
+          page,
+          limit,
+          totalPages,
+          hasNextPage: page < totalPages,
+          hasPreviousPage: page > 1,
+        },
+      };
+    } catch (err) {
+      const error = toError(err);
+      this.logger.error(
+        `Failed to find posts by author: ${error.message}`,
+        error.stack,
+      );
+      throw error;
+    }
   }
 
   countByAuthor(authorId: number): Promise<number> {
@@ -173,11 +236,65 @@ export class PrismaPostsRepository implements PostsRepositoryInterface {
     throw new Error('Method not implemented.');
   }
 
-  findByCategory(
+  async findByCategory(
     categoryId: number,
     options?: QueryOptions,
   ): Promise<PaginatedResponse<PostEntity>> {
-    throw new Error('Method not implemented.');
+    try {
+      const {
+        page = 1,
+        limit = 10,
+        sortBy = 'published_at',
+        sortOrder = 'DESC',
+      } = options || {};
+      const skip = (page - 1) * limit;
+
+      const [posts, total] = await Promise.all([
+        this.prisma.post.findMany({
+          where: {
+            postCategories: {
+              some: { categoryId: categoryId },
+            },
+            status: 'PUBLISHED',
+            deletedAt: null,
+          },
+          // include: this.getIncludeOptions(),
+          orderBy: { [sortBy]: sortOrder.toLowerCase() },
+          skip,
+          take: limit,
+        }),
+        this.prisma.post.count({
+          where: {
+            postCategories: {
+              some: { categoryId: categoryId },
+            },
+            status: 'PUBLISHED',
+            deletedAt: null,
+          },
+        }),
+      ]);
+
+      const totalPages = Math.ceil(total / limit);
+
+      return {
+        data: posts.map((post) => PostMapper.fromPrisma(post)),
+        meta: {
+          total: total | 0,
+          page,
+          limit,
+          totalPages,
+          hasNextPage: page < totalPages,
+          hasPreviousPage: page > 1,
+        },
+      };
+    } catch (err) {
+      const error = toError(err);
+      this.logger.error(
+        `Failed to find posts by category: ${error.message}`,
+        error.stack,
+      );
+      throw error;
+    }
   }
 
   async search(
@@ -209,14 +326,14 @@ export class PrismaPostsRepository implements PostsRepositoryInterface {
       const whereCondition = {
         OR: searchConditions,
         status: PostStatus.PUBLISHED,
-        deleted_at: null,
+        deletedAt: null,
       };
 
       const [posts, total] = await Promise.all([
         this.prisma.post.findMany({
           where: whereCondition,
           // include: this.getIncludeOptions(),
-          orderBy: { published_at: 'desc' },
+          orderBy: { publishedAt: 'desc' },
           skip: skip,
           take: limit,
         }),
@@ -264,7 +381,7 @@ export class PrismaPostsRepository implements PostsRepositoryInterface {
           AND: [
             { id: { not: postId } },
             { status: PostStatus.PUBLISHED },
-            { deleted_at: null },
+            { deletedAt: null },
             // {
             //   OR: [
             //     {
@@ -278,7 +395,7 @@ export class PrismaPostsRepository implements PostsRepositoryInterface {
           ],
         },
         // include: this.getIncludeOptions(),
-        orderBy: { published_at: 'desc' },
+        orderBy: { publishedAt: 'desc' },
         take: limit,
       });
 
@@ -321,23 +438,24 @@ export class PrismaPostsRepository implements PostsRepositoryInterface {
             date.setFullYear(date.getFullYear() - 1);
             break;
         }
-        dateFilter = { published_at: { gte: date } };
+        dateFilter = { publishedAt: { gte: date } };
       }
 
       const posts = await this.prisma.post.findMany({
         where: {
           status: 'PUBLISHED',
-          deleted_at: null,
-          views_count: { gte: minViews },
+          deletedAt: null,
+          viewsCount: { gte: minViews },
           ...dateFilter,
         },
         // include: this.getIncludeOptions(),
-        orderBy: { views_count: 'desc' },
+        orderBy: { viewsCount: 'desc' },
         take: limit,
       });
 
       return posts.map((post) => PostMapper.fromPrisma(post));
-    } catch (error) {
+    } catch (err) {
+      const error = toError(err);
       this.logger.error(
         `Failed to find most viewed posts: ${error.message}`,
         error.stack,
@@ -350,12 +468,39 @@ export class PrismaPostsRepository implements PostsRepositoryInterface {
     throw new Error('Method not implemented.');
   }
 
+  async update(post: PostEntity): Promise<boolean> {
+    try {
+      if (!post.id) {
+        throw new NotFoundException(`Post ${post.id} not found`);
+      }
+
+      const exists = await this.exists(post.id ?? 0);
+      if (!exists) {
+        throw new NotFoundException(`Post ${post.id} not found`);
+      }
+
+      const data = PostMapper.toUpdateInput(post);
+
+      // Create new post
+      await this.prisma.post.update({
+        where: { id: post.id },
+        data: data,
+      });
+
+      return true;
+    } catch (err) {
+      const error = toError(err);
+      this.logger.error(`Failed to update post: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
   async exists(id: number): Promise<boolean> {
     try {
       const count = await this.prisma.post.count({
         where: {
           id,
-          deleted_at: null,
+          deletedAt: null,
         },
       });
       return count > 0;
@@ -373,7 +518,7 @@ export class PrismaPostsRepository implements PostsRepositoryInterface {
     try {
       const where: any = {
         slug,
-        deleted_at: null,
+        deletedAt: null,
       };
 
       if (excludeId) {

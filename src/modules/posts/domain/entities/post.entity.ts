@@ -92,7 +92,7 @@ export class PostEntity extends BaseEntity {
     );
 
     // Restore state
-    post._status = PostStatusVO.create(PostStatus.PUBLISHED);
+    post._status = PostStatusVO.create(data.status);
     post._publishedAt = data.publishedAt;
     post._scheduledAt = data.scheduledAt;
     post._featuredImageUrl = data.featuredImageUrl;
