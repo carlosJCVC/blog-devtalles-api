@@ -1,0 +1,127 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =====================================================
+// ENUMS
+// =====================================================
+enum PostStatus {
+  DRAFT     @map("draft")
+  PUBLISHED @map("published")
+  ARCHIVED  @map("archived")
+  SCHEDULED @map("scheduled")
+
+  @@map("post_status")
+}
+
+// =====================================================
+// TABLES
+// =====================================================
+model Post {
+  // Primary key and audit fields
+  id         Int       @id @default(autoincrement())
+  created_at DateTime  @default(now()) @db.Timestamptz
+  updated_at DateTime  @updatedAt @db.Timestamptz
+  deleted_at DateTime?
+
+  title   String @db.VarChar(255)
+  slug    String @unique @db.VarChar(255)
+  content String @db.Text
+
+  status       PostStatus @default(DRAFT)
+  published_at DateTime?  @db.Timestamptz
+  scheduled_at DateTime?  @db.Timestamptz
+
+  author_id Int
+
+  featured_image_url String? @db.VarChar(500)
+
+  // Content flags
+  is_featured Boolean @default(true)
+
+  // Engagement metrics
+  views_count    Int            @default(0)
+  likes_count    Int            @default(0)
+  comments_count Int            @default(0)
+  PostCategory   PostCategory[]
+  PostTag        PostTag[]
+
+  // Indexes for performance
+  @@index([status, published_at(sort: Desc)], name: "idx_posts_status_published")
+  @@index([author_id], name: "idx_posts_author")
+  @@index([slug], name: "idx_posts_slug")
+  @@index([created_at(sort: Desc)], name: "idx_posts_created")
+  @@index([views_count(sort: Desc)], name: "idx_posts_views")
+  @@map("posts")
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  name        String  @unique @db.VarChar(100)
+  slug        String  @unique @db.VarChar(100)
+  description String? @db.Text
+  color       String? @db.VarChar(7) // Hex color
+  isActive    Boolean @default(true) @map("is_active")
+
+  // Relations
+  posts PostCategory[]
+
+  @@index([isActive], name: "idx_categories_active")
+  @@index([slug], name: "idx_categories_slug")
+  @@map("categories")
+}
+
+model Tag {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  name       String @unique @db.VarChar(50)
+  slug       String @unique @db.VarChar(50)
+  usageCount Int    @default(0) @map("usage_count")
+
+  // Relations
+  posts PostTag[]
+
+  @@index([usageCount(sort: Desc)], name: "idx_tags_usage")
+  @@index([slug], name: "idx_tags_slug")
+  @@map("tags")
+}
+
+model PostCategory {
+  postId     Int @map("post_id")
+  categoryId Int @map("category_id")
+
+  post     Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([postId, categoryId])
+  @@index([categoryId, postId], name: "idx_post_categories_category")
+  @@map("post_categories")
+}
+
+model PostTag {
+  postId Int @map("post_id")
+  tagId  Int @map("tag_id")
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
+  @@index([tagId, postId], name: "idx_post_tags_tag")
+  @@map("post_tags")
+}
