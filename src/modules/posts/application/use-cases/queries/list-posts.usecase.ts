@@ -55,12 +55,21 @@ export class ListPostsUseCase {
     }
   }
 
-  private buildFilters(query: PostQuery): any {
-    const filters: any = {};
+  private buildFilters(query: PostQuery): PostQuery {
+    const filters: PostQuery = {
+      page: 1,
+      limit: 10,
+      sortBy: 'createdAt',
+      sortOrder: 'DESC',
+    };
 
     if (query.dateFrom || query.dateTo) {
-      filters.dateFrom = query.dateFrom ? new Date(query.dateFrom) : undefined;
-      filters.dateTo = query.dateTo ? new Date(query.dateTo) : undefined;
+      filters.dateFrom = query.dateFrom
+        ? new Date(query.dateFrom).toDateString()
+        : undefined;
+      filters.dateTo = query.dateTo
+        ? new Date(query.dateTo).toDateString()
+        : undefined;
     }
 
     return filters;

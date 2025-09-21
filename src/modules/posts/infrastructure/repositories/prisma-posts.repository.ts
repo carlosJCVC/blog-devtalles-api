@@ -152,11 +152,11 @@ export class PrismaPostsRepository implements PostsRepositoryInterface {
     authorId?: string,
     options?: QueryOptions,
   ): Promise<PaginatedResponse<PostEntity>> {
-    throw new Error('Method not implemented.');
+    return this.findByStatus(PostStatus.DRAFT, options);
   }
 
-  findScheduled(): Promise<PostEntity[]> {
-    throw new Error('Method not implemented.');
+  async findScheduled(): Promise<PostEntity[]> {
+    return (await this.findByStatus(PostStatus.DRAFT)).data;
   }
 
   async findByAuthor(
