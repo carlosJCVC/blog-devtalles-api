@@ -1,3 +1,4 @@
+export type { CategoriesRepositoryInterface } from './categories.repository.interface';
 export type { PostsRepositoryInterface } from './posts.repository.interface';
 
 export type {

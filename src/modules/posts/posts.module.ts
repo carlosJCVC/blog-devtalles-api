@@ -22,15 +22,25 @@ import { PostExceptionFilter } from './infrastructure/filters/post-exception.fil
 import { PostResponseInterceptor } from './infrastructure/interceptors/post-response.interceptor';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { CreatePostUseCase } from './application/use-cases/commands/create-post.usecase';
+import { UpdatePostUseCase } from './application/use-cases/commands/update-post.usecase';
+import { PublishPostUseCase } from './application/use-cases/commands/publish-post.usecase';
+import { DeletePostUseCase } from './application/use-cases/commands/delete-post.usecase';
+import { CATEGORY_REPOSITORY_TOKEN } from './domain/repositories/categories.repository.interface';
+import { PrismaCategoriesRepository } from './infrastructure/repositories/prisma-categories.repository';
+import { AdminPostsController } from './infrastructure/controllers/admin-posts.controller';
 // import { CommonModule } from '@src/common/common.module';
 
 @Module({
-  controllers: [PostsController],
+  controllers: [PostsController, AdminPostsController],
   providers: [
     // Repository Implementations
     {
       provide: POSTS_REPOSITORY_TOKEN,
       useClass: PrismaPostsRepository,
+    },
+    {
+      provide: CATEGORY_REPOSITORY_TOKEN,
+      useClass: PrismaCategoriesRepository,
     },
 
     // Validation
@@ -48,6 +58,9 @@ import { CreatePostUseCase } from './application/use-cases/commands/create-post.
 
     // commands
     CreatePostUseCase,
+    UpdatePostUseCase,
+    PublishPostUseCase,
+    DeletePostUseCase,
 
     // Event Handlers
     PostCreatedHandler,
@@ -79,6 +92,7 @@ import { CreatePostUseCase } from './application/use-cases/commands/create-post.
 
     // Export repositories for potential external use
     POSTS_REPOSITORY_TOKEN,
+    CATEGORY_REPOSITORY_TOKEN,
   ],
 })
 export class PostsModule {}

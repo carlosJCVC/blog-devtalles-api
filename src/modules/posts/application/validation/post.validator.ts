@@ -1,6 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { PostsRepositoryInterface } from '../../domain/repositories';
+import type {
+  CategoriesRepositoryInterface,
+  PostsRepositoryInterface,
+} from '../../domain/repositories';
 import { POSTS_REPOSITORY_TOKEN } from '../../domain/repositories/posts.repository.interface';
+import { CATEGORY_REPOSITORY_TOKEN } from '../../domain/repositories/categories.repository.interface';
 // import { CategoriesRepositoryInterface } from '../../domain/repositories/categories.repository.interface';
 
 @Injectable()
@@ -8,7 +12,9 @@ export class PostValidator {
   constructor(
     @Inject(POSTS_REPOSITORY_TOKEN)
     private readonly postsRepository: PostsRepositoryInterface,
-    // private readonly categoriesRepository: CategoriesRepositoryInterface,
+
+    @Inject(CATEGORY_REPOSITORY_TOKEN)
+    private readonly categoriesRepository: CategoriesRepositoryInterface,
   ) {}
 
   /**
@@ -21,6 +27,22 @@ export class PostValidator {
     const exists = await this.postsRepository.existsBySlug(slug, excludePostId);
     if (exists) {
       throw new Error(`Post with slug '${slug}' already exists`);
+    }
+  }
+
+  /**
+   * Validates if all category IDs exist and are active
+   */
+  async validateCategoryIds(categoryIds: number[]): Promise<void> {
+    for (const categoryId of categoryIds) {
+      const category = await this.categoriesRepository.findById(categoryId);
+      if (!category) {
+        throw new Error(`Category with ID '${categoryId}' not found`);
+      }
+
+      if (!category.isActive) {
+        throw new Error(`Category '${category.name}' is not active`);
+      }
     }
   }
 

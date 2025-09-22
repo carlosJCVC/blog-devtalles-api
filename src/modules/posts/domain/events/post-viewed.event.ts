@@ -1,7 +1,7 @@
 import { DomainEvent } from '@src/common/domain/events/domain-event.base';
 
 export interface ViewerInfo {
-  userId?: string;
+  userId?: number | string;
   sessionId?: string;
   ipAddress?: string;
   userAgent?: string;
@@ -10,7 +10,7 @@ export interface ViewerInfo {
 
 export class PostViewedEvent extends DomainEvent {
   constructor(
-    aggregateId: string,
+    aggregateId: number,
     public readonly slug: string,
     public readonly viewerInfo: ViewerInfo,
     public readonly isUniqueView: boolean = true,

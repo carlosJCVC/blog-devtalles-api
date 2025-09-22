@@ -20,7 +20,7 @@ export class PostEntity extends BaseEntity {
   private _allowComments: boolean;
 
   // Collections (simplified for now)
-  private _categoryIds: string[] = [];
+  private _categoryIds: number[] = [];
   private _tagIds: string[] = [];
 
   private constructor(
@@ -162,7 +162,7 @@ export class PostEntity extends BaseEntity {
     return this._allowComments;
   }
 
-  get categoryIds(): string[] {
+  get categoryIds(): number[] {
     return [...this._categoryIds];
   }
 
@@ -177,6 +177,36 @@ export class PostEntity extends BaseEntity {
 
   get readingTimeMinutes(): number {
     return this._content.readingTimeMinutes;
+  }
+
+  updateContent(title?: string, content?: string, customSlug?: string): void {
+    let hasChanges = false;
+
+    if (title && title !== this._title.value) {
+      // const oldTitle = this._title.value;
+      this._title = PostTitle.create(title);
+
+      // Update slug if not custom provided
+      if (!customSlug) {
+        this._slug = PostSlug.fromTitle(title);
+      }
+      hasChanges = true;
+    }
+
+    if (content && content !== this._content.content) {
+      this._content = PostContent.create(content);
+      hasChanges = true;
+    }
+
+    if (customSlug && customSlug !== this._slug.value) {
+      this._slug = PostSlug.fromValue(customSlug);
+      hasChanges = true;
+    }
+
+    if (hasChanges) {
+      this.markAsUpdated();
+      // TODO add event updated here
+    }
   }
 
   // bussines logic
@@ -257,7 +287,7 @@ export class PostEntity extends BaseEntity {
     this.markAsUpdated();
   }
 
-  assignCategories(categoryIds: string[]): void {
+  assignCategories(categoryIds: number[]): void {
     this.validateCategoryIds(categoryIds);
     this._categoryIds = [...categoryIds];
     this.markAsUpdated();
@@ -322,13 +352,13 @@ export class PostEntity extends BaseEntity {
     // NEW VALIDATIONS HERE
   }
 
-  private validateCategoryIds(categoryIds: string[]): void {
+  private validateCategoryIds(categoryIds: number[]): void {
     if (categoryIds.length > 5) {
       throw new Error('Post cannot have more than 5 categories');
     }
 
     for (const id of categoryIds) {
-      if (!id || id.trim().length === 0) {
+      if (!id || id === 0) {
         throw new Error('Category ID cannot be empty');
       }
     }

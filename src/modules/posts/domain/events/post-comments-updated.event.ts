@@ -2,7 +2,7 @@ import { DomainEvent } from '@src/common/domain/events/domain-event.base';
 
 export class PostCommentsUpdatedEvent extends DomainEvent {
   constructor(
-    aggregateId: string,
+    aggregateId: number,
     public readonly slug: string,
     public readonly newCommentsCount: number,
     public readonly previousCommentsCount: number,

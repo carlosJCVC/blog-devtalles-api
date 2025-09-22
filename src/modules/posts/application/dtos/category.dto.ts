@@ -1,5 +1,5 @@
 export class CategoryDto {
-  id: string;
+  id: number;
 
   name: string;
 
@@ -8,4 +8,8 @@ export class CategoryDto {
   description?: string;
 
   color?: string;
+
+  createdAt: Date | string;
+
+  updatedAt: Date | string;
 }

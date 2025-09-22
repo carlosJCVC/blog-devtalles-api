@@ -2,11 +2,11 @@ import { DomainEvent } from '@src/common/domain/events/domain-event.base';
 
 export class PostCategoriesChangedEvent extends DomainEvent {
   constructor(
-    aggregateId: string,
+    aggregateId: number,
     public readonly slug: string,
-    public readonly newCategoryIds: string[],
-    public readonly previousCategoryIds: string[],
-    public readonly updatedBy: string,
+    public readonly newCategoryIds: number[],
+    public readonly previousCategoryIds: number[],
+    public readonly updatedBy: number,
   ) {
     super(aggregateId);
   }
@@ -15,13 +15,13 @@ export class PostCategoriesChangedEvent extends DomainEvent {
     return 'post.categories.changed';
   }
 
-  getAddedCategories(): string[] {
+  getAddedCategories(): number[] {
     return this.newCategoryIds.filter(
       (id) => !this.previousCategoryIds.includes(id),
     );
   }
 
-  getRemovedCategories(): string[] {
+  getRemovedCategories(): number[] {
     return this.previousCategoryIds.filter(
       (id) => !this.newCategoryIds.includes(id),
     );

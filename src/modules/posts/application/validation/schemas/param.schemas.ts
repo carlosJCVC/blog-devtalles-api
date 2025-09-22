@@ -19,4 +19,4 @@ export const slugSchema = z
 
 export const uuidSchema = z.uuid('Invalid UUID format');
 
-export const idNumberSchema = z.number().int().positive('Invalid id');
+export const idNumberSchema = z.number().int().positive('Invalid ID');

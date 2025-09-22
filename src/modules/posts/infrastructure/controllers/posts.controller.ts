@@ -98,7 +98,7 @@ export class PostsController {
     const viewerInfo = {
       ipAddress: req.ip,
       userAgent: req.get('User-Agent'),
-      userId: req.user?.id.toString(), // If authenticated
+      userId: req.user?.id, // If authenticated
       sessionId: req.sessionID,
     };
 

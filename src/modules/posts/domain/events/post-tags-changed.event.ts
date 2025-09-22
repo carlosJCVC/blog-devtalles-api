@@ -2,11 +2,11 @@ import { DomainEvent } from '@src/common/domain/events/domain-event.base';
 
 export class PostTagsChangedEvent extends DomainEvent {
   constructor(
-    aggregateId: string,
+    aggregateId: number,
     public readonly slug: string,
-    public readonly newTagIds: string[],
-    public readonly previousTagIds: string[],
-    public readonly updatedBy: string,
+    public readonly newTagIds: number[],
+    public readonly previousTagIds: number[],
+    public readonly updatedBy: number,
   ) {
     super(aggregateId);
   }
@@ -15,11 +15,11 @@ export class PostTagsChangedEvent extends DomainEvent {
     return 'post.tags.changed';
   }
 
-  getAddedTags(): string[] {
+  getAddedTags(): number[] {
     return this.newTagIds.filter((id) => !this.previousTagIds.includes(id));
   }
 
-  getRemovedTags(): string[] {
+  getRemovedTags(): number[] {
     return this.previousTagIds.filter((id) => !this.newTagIds.includes(id));
   }
 

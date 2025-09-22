@@ -31,6 +31,8 @@ export class PostMapper {
         slug: `category-${index + 1}`,
         description: `Description for category ${index + 1}`,
         color: '#3B82F6',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       })), // mock for now
       tags: post.tagIds.map((id, index) => ({
         id,

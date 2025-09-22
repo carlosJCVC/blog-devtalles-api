@@ -366,15 +366,13 @@ export class PrismaPostsRepository implements PostsRepositoryInterface {
     try {
       const currentPost = await this.prisma.post.findUnique({
         where: { id: postId },
-        // include: { post_categories: true, post_tags: true },
+        include: { postCategories: true, postTags: true },
       });
 
       if (!currentPost) return [];
 
-      // const categoryIds = currentPost.post_categories.map(
-      //   (pc) => pc.category_id,
-      // );
-      // const tagIds = currentPost.post_tags.map((pt) => pt.tag_id);
+      const categoryIds = currentPost.postCategories.map((pc) => pc.categoryId);
+      const tagIds = currentPost.postTags.map((pt) => pt.tagId);
 
       const posts = await this.prisma.post.findMany({
         where: {
@@ -382,19 +380,18 @@ export class PrismaPostsRepository implements PostsRepositoryInterface {
             { id: { not: postId } },
             { status: PostStatus.PUBLISHED },
             { deletedAt: null },
-            // {
-            //   OR: [
-            //     {
-            //       post_categories: {
-            //         some: { category_id: { in: categoryIds } },
-            //       },
-            //     },
-            //     { post_tags: { some: { tag_id: { in: tagIds } } } },
-            //   ],
-            // },
+            {
+              OR: [
+                {
+                  postCategories: {
+                    some: { categoryId: { in: categoryIds } },
+                  },
+                },
+                { postTags: { some: { tagId: { in: tagIds } } } },
+              ],
+            },
           ],
         },
-        // include: this.getIncludeOptions(),
         orderBy: { publishedAt: 'desc' },
         take: limit,
       });
@@ -464,8 +461,49 @@ export class PrismaPostsRepository implements PostsRepositoryInterface {
     }
   }
 
-  findMostLiked(options?: PopularityOptions): Promise<PostEntity[]> {
-    throw new Error('Method not implemented.');
+  async findMostLiked(options?: PopularityOptions): Promise<PostEntity[]> {
+    try {
+      const { limit = 10, timeframe = 'week' } = options || {};
+
+      let dateFilter = {};
+      if (timeframe !== 'all') {
+        const date = new Date();
+        switch (timeframe) {
+          case 'day':
+            date.setDate(date.getDate() - 1);
+            break;
+          case 'week':
+            date.setDate(date.getDate() - 7);
+            break;
+          case 'month':
+            date.setMonth(date.getMonth() - 1);
+            break;
+          case 'year':
+            date.setFullYear(date.getFullYear() - 1);
+            break;
+        }
+        dateFilter = { published_at: { gte: date } };
+      }
+
+      const posts = await this.prisma.post.findMany({
+        where: {
+          status: 'PUBLISHED',
+          deletedAt: null,
+          ...dateFilter,
+        },
+        orderBy: { likesCount: 'desc' },
+        take: limit,
+      });
+
+      return posts.map((post) => PostMapper.fromPrisma(post));
+    } catch (err) {
+      const error = toError(err);
+      this.logger.error(
+        `Failed to find most liked posts: ${error.message}`,
+        error.stack,
+      );
+      throw error;
+    }
   }
 
   async update(post: PostEntity): Promise<boolean> {
@@ -516,13 +554,14 @@ export class PrismaPostsRepository implements PostsRepositoryInterface {
 
   async existsBySlug(slug: string, excludeId?: number): Promise<boolean> {
     try {
-      const where: any = {
+      const where = {
+        id: {},
         slug,
         deletedAt: null,
       };
 
       if (excludeId) {
-        where.id = { not: excludeId };
+        where.id = { not: excludeId.toString() };
       }
 
       const count = await this.prisma.post.count({ where });
@@ -538,24 +577,87 @@ export class PrismaPostsRepository implements PostsRepositoryInterface {
     }
   }
 
-  count(filters?: PostFilters): Promise<number> {
-    throw new Error('Method not implemented.');
+  async count(filters?: PostFilters): Promise<number> {
+    try {
+      return await this.prisma.post.count({
+        where: {
+          deletedAt: null,
+        },
+      });
+    } catch (err) {
+      const error = toError(err);
+      this.logger.error(`Failed to count posts: ${error.message}`, error.stack);
+
+      throw error;
+    }
   }
 
-  bulkUpdateStatus(ids: number[], status: PostStatus): Promise<void> {
-    throw new Error('Method not implemented.');
+  async bulkUpdateStatus(ids: number[], status: PostStatus): Promise<void> {
+    try {
+      await this.prisma.post.updateMany({
+        where: { id: { in: ids } },
+        data: {
+          status: PostStatusVO.create(status).toPrismaValue(),
+          updatedAt: new Date(),
+        },
+      });
+    } catch (err) {
+      const error = toError(err);
+      this.logger.error(
+        `Failed to bulk update status: ${error.message}`,
+        error.stack,
+      );
+      throw error;
+    }
   }
 
-  delete(id: number): Promise<void> {
-    throw new Error('Method not implemented.');
+  async delete(id: number): Promise<void> {
+    try {
+      await this.prisma.post.delete({
+        where: { id },
+      });
+    } catch (err) {
+      const error = toError(err);
+      this.logger.error(`Failed to delete post: ${error.message}`, error.stack);
+      throw error;
+    }
   }
 
-  bulkDelete(ids: number[]): Promise<void> {
-    throw new Error('Method not implemented.');
+  async bulkDelete(ids: number[]): Promise<void> {
+    try {
+      await this.prisma.post.updateMany({
+        where: { id: { in: ids } },
+        data: {
+          deletedAt: new Date(),
+          updatedAt: new Date(),
+        },
+      });
+    } catch (err) {
+      const error = toError(err);
+
+      this.logger.error(
+        `Failed to bulk delete posts: ${error.message}`,
+        error.stack,
+      );
+      throw error;
+    }
   }
 
-  softDelete(id: number): Promise<void> {
-    throw new Error('Method not implemented.');
+  async softDelete(id: number): Promise<void> {
+    try {
+      await this.prisma.post.update({
+        where: { id },
+        data: { deletedAt: new Date() },
+      });
+    } catch (err) {
+      const error = toError(err);
+      this.logger.error(
+        `Failed to soft delete post: ${error.message}`,
+        error.stack,
+      );
+
+      throw error;
+    }
   }
 
   private getIncludeOptions() {

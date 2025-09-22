@@ -4,10 +4,7 @@ import {
   type EventBus,
 } from '@src/common/domain/events/event-bus.interface';
 import { PostEntity } from '@src/modules/posts/domain/entities/post.entity';
-import {
-  PostViewedEvent,
-  ViewerInfo,
-} from '@src/modules/posts/domain/events/post-viewed.event';
+import { ViewerInfo } from '@src/modules/posts/domain/events/post-viewed.event';
 import { PostNotFoundException } from '@src/modules/posts/domain/exceptions';
 import type { PostsRepositoryInterface } from '@src/modules/posts/domain/repositories';
 import { POSTS_REPOSITORY_TOKEN } from '@src/modules/posts/domain/repositories/posts.repository.interface';
@@ -33,7 +30,7 @@ export class GetPostUseCase {
     identifier: string,
     incrementViews: boolean = false,
     viewerInfo?: {
-      userId?: string;
+      userId?: string | number;
       sessionId?: string;
       ipAddress?: string;
       userAgent?: string;
@@ -44,7 +41,7 @@ export class GetPostUseCase {
     try {
       // Try to find by ID first, then by slug
       let post: PostEntity | null;
-      if (typeof identifier === 'number') {
+      if (!isNaN(+identifier) && typeof +identifier === 'number') {
         const id = Number(identifier);
         post = await this.postsRepository.findById(id);
       } else {

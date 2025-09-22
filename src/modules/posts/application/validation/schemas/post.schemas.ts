@@ -1,4 +1,5 @@
 import z from 'zod';
+import { idNumberSchema } from './param.schemas';
 
 const uuidSchema = z.uuid('Invalid UUID format');
 
@@ -83,7 +84,7 @@ export const updatePostSchema = z.object({
   featuredImageUrl: urlSchema.optional().or(z.literal('')), // Allow empty string to remove
 
   categoryIds: z
-    .array(uuidSchema)
+    .array(idNumberSchema)
     .max(5, 'Post cannot have more than 5 categories')
     .optional(),
 
@@ -101,7 +102,6 @@ export const updatePostSchema = z.object({
     .transform((tags) => (tags ? [...new Set(tags)] : undefined)),
 
   allowComments: z.boolean().optional(),
-  isPremium: z.boolean().optional(),
 
   changeSummary: z
     .string()
@@ -112,8 +112,7 @@ export const updatePostSchema = z.object({
 export type UpdatePostPayload = z.infer<typeof updatePostSchema>;
 
 export const publishPostSchema = z.object({
-  scheduledAt: z
-    .string()
+  scheduledAt: z.iso
     .datetime('Invalid datetime format')
     .optional()
     .refine(

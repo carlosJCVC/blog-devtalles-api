@@ -11,12 +11,17 @@ import {
   CreatePostPayload,
   PopularPostQuery,
   PostQuery,
+  PublishPostPayload,
   SearchPostQuery,
+  UpdatePostPayload,
 } from '../validation';
 import { PaginatedResponse } from '../../domain/repositories';
 import { ViewerInfo } from '../../domain/events/post-viewed.event';
 import { PostEntity } from '../../domain/entities/post.entity';
 import { CreatePostUseCase } from '../use-cases/commands/create-post.usecase';
+import { UpdatePostUseCase } from '../use-cases/commands/update-post.usecase';
+import { PublishPostUseCase } from '../use-cases/commands/publish-post.usecase';
+import { DeletePostUseCase } from '../use-cases/commands/delete-post.usecase';
 
 @Injectable()
 export class PostsService {
@@ -25,9 +30,9 @@ export class PostsService {
   constructor(
     // Command Use Cases
     private readonly createPostUseCase: CreatePostUseCase,
-    // private readonly updatePostUseCase: UpdatePostUseCase,
-    // private readonly publishPostUseCase: PublishPostUseCase,
-    // private readonly deletePostUseCase: DeletePostUseCase,
+    private readonly updatePostUseCase: UpdatePostUseCase,
+    private readonly publishPostUseCase: PublishPostUseCase,
+    private readonly deletePostUseCase: DeletePostUseCase,
 
     // Query Use Cases
     private readonly getPostUseCase: GetPostUseCase,
@@ -38,6 +43,7 @@ export class PostsService {
     private readonly getPostsByAuthorUseCase: GetPostsByAuthorUseCase,
   ) {}
 
+  // commands
   async createPost(
     payload: CreatePostPayload,
     authorId: number,
@@ -49,6 +55,38 @@ export class PostsService {
     return await this.createPostUseCase.execute(payload, authorId);
   }
 
+  async updatePost(
+    postId: number,
+    input: UpdatePostPayload,
+    updatedBy: number,
+  ): Promise<PostEntity> {
+    this.logger.log(`Service: Updating post ${postId}`);
+
+    return await this.updatePostUseCase.execute(postId, input, updatedBy);
+  }
+
+  async publishPost(
+    postId: number,
+    input: PublishPostPayload = {},
+  ): Promise<PostEntity> {
+    this.logger.log(`Service: Publishing post ${postId}`);
+
+    return await this.publishPostUseCase.execute(postId, input);
+  }
+
+  async deletePost(
+    postId: number,
+    deletedBy: number,
+    hardDelete: boolean = false,
+  ): Promise<void> {
+    this.logger.log(
+      `Service: Deleting post ${postId}, hardDelete: ${hardDelete}`,
+    );
+
+    return await this.deletePostUseCase.execute(postId, deletedBy, hardDelete);
+  }
+
+  // queries
   async getPostBySlug(
     slug: string,
     incrementViews: boolean = true,

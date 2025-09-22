@@ -2,10 +2,10 @@ import { DomainEvent } from '@src/common/domain/events/domain-event.base';
 
 export class PostFeaturedEvent extends DomainEvent {
   constructor(
-    aggregateId: string,
+    aggregateId: number,
     public readonly title: string,
     public readonly slug: string,
-    public readonly featuredBy: string,
+    public readonly featuredBy: number,
   ) {
     super(aggregateId);
   }
