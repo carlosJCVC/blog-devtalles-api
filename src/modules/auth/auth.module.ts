@@ -19,9 +19,11 @@ import { USERS_REPOSITORY_TOKEN } from '../users/domain/repositories/users.repos
 import { JwtStrategy } from './infrastructure/strategies/jwt.strategy';
 import { LocalStrategy } from './infrastructure/strategies/local.strategy';
 import { AuthController } from './infrastructure/controllers/auth.controller';
+import { OAuthController } from './infrastructure/controllers/oauth.controller';
+import { DiscordOAuthService } from './infrastructure/services/discord-oauth.service';
 
 @Module({
-  controllers: [AuthController],
+  controllers: [AuthController, OAuthController],
   imports: [
     DatabaseModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
@@ -39,6 +41,7 @@ import { AuthController } from './infrastructure/controllers/auth.controller';
   ],
   providers: [
     AuthService,
+    DiscordOAuthService,
 
     // Use Cases - Commands
     LoginUseCase,
@@ -61,6 +64,6 @@ import { AuthController } from './infrastructure/controllers/auth.controller';
     JwtStrategy,
     LocalStrategy,
   ],
-  exports: [AuthService, JwtModule, PassportModule],
+  exports: [AuthService, DiscordOAuthService, JwtModule, PassportModule],
 })
 export class AuthModule {}

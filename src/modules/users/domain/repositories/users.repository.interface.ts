@@ -11,7 +11,7 @@ export interface UsersRepositoryInterface {
 
   findByRefreshToken(refreshToken: string): Promise<UserEntity>;
 
-  findByDiscordId(discordId: string): Promise<UserEntity>;
+  findByDiscordId(discordId: string): Promise<UserEntity | null>;
 
   create(userData: Partial<UserEntity>): Promise<UserEntity>;
 

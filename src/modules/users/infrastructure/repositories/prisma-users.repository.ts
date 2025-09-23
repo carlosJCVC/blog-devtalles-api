@@ -81,7 +81,7 @@ export class PrismaUsersRepository implements UsersRepositoryInterface {
     }
   }
 
-  async findByDiscordId(discordId: string): Promise<UserEntity> {
+  async findByDiscordId(discordId: string): Promise<UserEntity | null> {
     try {
       const user = await this.prisma.user.findFirst({
         where: {
@@ -89,11 +89,7 @@ export class PrismaUsersRepository implements UsersRepositoryInterface {
         },
       });
 
-      if (!user) {
-        throw new UserNotFoundException(discordId);
-      }
-
-      return UserMapper.fromPrismaToEntity(user);
+      return user ? UserMapper.fromPrismaToEntity(user) : null;
     } catch (err) {
       const error = toError(err);
       this.logger.error(

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import {
   DiscordRegisterPayload,
   RegisterPayload,
@@ -18,6 +18,10 @@ import { LoginResponseDto } from '../dtos/login.dto';
 import { RefreshTokenPayload } from '../schemas/token.schema';
 import { RefreshDto } from '../dtos/refresh.dto';
 import { UserProfileDto } from '../dtos/profile.dto';
+import {
+  USERS_REPOSITORY_TOKEN,
+  type UsersRepositoryInterface,
+} from '@src/modules/users/domain/repositories/users.repository.interface';
 
 @Injectable()
 export class AuthService {
@@ -30,6 +34,9 @@ export class AuthService {
     private readonly logoutUseCase: LogoutUseCase,
     private readonly getUserProfileUseCase: GetUserProfileUseCase,
     private readonly validateDiscordUserUseCase: ValidateDiscordUserUseCase,
+
+    @Inject(USERS_REPOSITORY_TOKEN)
+    private readonly usersRepository: UsersRepositoryInterface,
   ) {}
 
   async register(dto: RegisterPayload): Promise<UserDto> {
@@ -74,11 +81,15 @@ export class AuthService {
     discordId: string,
   ): Promise<{ exists: boolean; user?: UserDto }> {
     try {
-      const user = await this.validateDiscordUserUseCase.execute(discordId);
-      return {
-        exists: true,
-        user: UserMapper.fromEntityToDto(user),
-      };
+      const user = await this.usersRepository.findByDiscordId(discordId);
+
+      if (user) {
+        return {
+          exists: true,
+        };
+      } else {
+        return { exists: false };
+      }
     } catch {
       return { exists: false };
     }
