@@ -1,98 +1,243 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Blog API - NestJS with Clean Architecture & CQRS
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A scalable blog API built with NestJS, PostgreSQL, and Prisma following Clean Architecture principles, CQRS pattern, and Event-Driven architecture.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🚀 Features
 
-## Description
+- Clean Architecture with separated layers
+- CQRS Pattern for optimal performance
+- Event-Driven Architecture for decoupling
+- JWT Authentication & Role-based Authorization
+- Input validation with class-validator, zod.
+- Centralized error handling
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 🛠 Tech Stack
 
-## Project setup
+- **Framework**: NestJS
+- **Database**: PostgreSQL
+- **ORM**: Prisma
+- **Authentication**: JWT
+- **Validation**: ZOD
+- **Testing**: Jest
 
-```bash
-$ pnpm install
+## 📋 Prerequisites
+
+- Node.js >= 18.0.0
+- PostgreSQL >= 14
+- pnpm
+
+## 🚀 Quick Start
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd back-blog-devtalles
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Setup environment variables**
+   ```bash
+   # Copy the example file
+   cp .env.example .env
+   ```
+   
+   **Configure your `.env` file with the following variables:**
+   
+   ```env
+   # Database Configuration
+   DATABASE_URL="postgresql://username:password@localhost:5432/blog_db?schema=public"
+   
+   # JWT Authentication
+   JWT_SECRET=your-super-secret-jwt-key-change-in-production-min-32-chars
+   JWT_EXPIRES_IN=7d              # Token expiration (7 days)
+   JWT_REFRESH_SECRET=your-refresh-secret-key-also-change-in-production
+   JWT_REFRESH_EXPIRES_IN=30d     # Refresh token expiration (30 days)
+   
+   # Discord OAuth (Optional - for Discord login)
+   DISCORD_CLIENT_ID=your-discord-app-client-id
+   DISCORD_CLIENT_SECRET=your-discord-app-client-secret
+   DISCORD_REDIRECT_URL=http://localhost:3000/auth/discord/callback
+   
+   # API Configuration
+   PORT=3000                      # Server port
+   NODE_ENV=development           # Environment (development/production)
+   ```
+   
+   **Important Security Notes:**
+   - Change `JWT_SECRET` and `JWT_REFRESH_SECRET` to strong, random strings (min 32 characters)
+   - Use different secrets for development and production
+   - Never commit your `.env` file to version control
+   - For production, use environment-specific values
+   - Keep Discord credentials secure and never expose them publicly
+
+## 🎮 Discord OAuth Setup (Optional)
+
+If you want to enable Discord login, follow these steps:
+
+1. **Create Discord Application**
+   - Go to [Discord Developer Portal](https://discord.com/developers/applications)
+   - Click "New Application" and give it a name
+   - Go to the "OAuth2" section in the sidebar
+
+2. **Configure OAuth2**
+   - Copy the **Client ID** and **Client Secret**
+   - Add redirect URL: `http://localhost:3000/auth/discord/callback`
+   - In "Scopes" section, select: `identify` and `email`
+
+3. **Add to Environment Variables**
+   ```env
+   DISCORD_CLIENT_ID=your-client-id-from-discord
+   DISCORD_CLIENT_SECRET=your-client-secret-from-discord
+   DISCORD_REDIRECT_URL=http://localhost:3000/auth/discord/callback
+   ```
+
+4. **For Production**
+   - Update redirect URL to your production domain
+   - Example: `https://yourdomain.com/auth/discord/callback`
+
+**Discord OAuth Flow:**
+- Login: `GET /api/v1/auth/discord`
+- Callback: `GET /auth/discord/callback` (handled automatically)
+
+4. **Start PostgreSQL**
+   ```bash
+   # Make sure PostgreSQL is installed and running locally
+   # Create the database
+   createdb blog_db
+   
+   # Or connect to your existing PostgreSQL instance
+   # Update DATABASE_URL in .env with your connection details
+   ```
+
+5. **Setup database**
+   ```bash
+   npx prisma generate
+   npx prisma db push
+   ```
+
+6. **Start the application**
+   ```bash
+   npm run start:dev
+   ```
+
+7. **Access the API**
+   - API: http://localhost:3000
+   - Health Check: http://localhost:3000/health
+
+## ⚙️ Environment Variables
+
+Create a `.env` file in the root directory with the following configuration:
+
+### Database
+| Variable | Description | Example | Required |
+|----------|-------------|---------|----------|
+| `DATABASE_URL` | Full PostgreSQL connection string | `postgresql://user:pass@localhost:5432/blog_db` | ✅ |
+
+### JWT Authentication
+| Variable | Description | Example | Required |
+|----------|-------------|---------|----------|
+| `JWT_SECRET` | Secret key for JWT tokens (min 32 chars) | `your-super-secret-32-char-string` | ✅ |
+| `JWT_EXPIRES_IN` | Access token expiration | `7d` | ✅ |
+| `JWT_REFRESH_SECRET` | Secret for refresh tokens | `your-refresh-secret-key` | ✅ |
+| `JWT_REFRESH_EXPIRES_IN` | Refresh token expiration | `30d` | ✅ |
+
+### Discord OAuth (Optional)
+| Variable | Description | Example | Required |
+|----------|-------------|---------|----------|
+| `DISCORD_CLIENT_ID` | Discord application client ID | `123456789132455` | ❌ |
+| `DISCORD_CLIENT_SECRET` | Discord application secret | `HSAHJSAJDHJAkjahsjahasasaexample` | ❌ |
+| `DISCORD_REDIRECT_URL` | Discord OAuth callback URL | `http://localhost:3000/auth/discord/callback` | ❌ |
+
+### API Configuration
+| Variable | Description | Example | Required |
+|----------|-------------|---------|----------|
+| `PORT` | Server port | `3000` | ✅ |
+| `NODE_ENV` | Environment mode | `development` | ✅ |
+
+
+
+```
+src/
+├─ app.module.ts
+├─ main.ts
+├─ config/
+├─ common/
+├─ database/
+├─ shared/
+└─ modules/
+   ├─ auth/
+   ├─ users/
+   ├─ posts/
 ```
 
-## Compile and run the project
+## 🔧 Available Scripts
 
 ```bash
-# development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+pnpm run start          # Start application
+pnpm run start:dev      # Start in development mode
+pnpm run build          # Build for production
+pnpm run test           # Run tests
+pnpm run test:e2e       # Run e2e tests
 ```
 
-## Run tests
+## 📚 API Endpoints
 
-```bash
-# unit tests
-$ pnpm run test
+Main API endpoints available:
 
-# e2e tests
-$ pnpm run test:e2e
+- **Authentication**
+  - `POST /api/v1/auth/register` - User registration
+  - `POST /api/v1/auth/login` - User login
+  - `GET /api/v1/auth/profile` - Get user profile
+  - `POST /api/v1/auth/refresh` - Refresh token
+  - `GET /api/v1/auth/discord` - Discord OAuth login
+  - `GET /oauth/discord` - Discord OAuth callback
+  - `GET /api/v1/auth/logout` - Logout
 
-# test coverage
-$ pnpm run test:cov
+- **Posts**
+  - `GET /api/v1/posts` - Get all posts
+  - `GET /api/v1/posts/:id` - Get post by ID
+  - `POST /api/v1/posts` - Create new post
+  - `PUT /api/v1/posts/:id` - Update post
+  - `DELETE /api/v1/posts/:id` - Delete post
+
+  - Search: `GET /api/v1/posts/search?query=Theatrum`
+  - Most Popular: `GET /api/v1/posts/popular`
+  - Related: `GET /api/v1/posts/{{postId}}/related`
+  - Get by slug: `GET /api/v1/posts/{{slug}}`
+  - List: `GET /api/v1/admin/posts`
+  - Update: `PUT /api/v1/admin/posts/{{postId}}/publish`
+  - Soft delete: `PUT /api/v1/admin/posts/{{postId}}/publish`
+
+## 🔐 Authentication
+
+The API supports multiple authentication methods:
+
+### Traditional JWT
+- Register: `POST /api/v1/auth/register`
+- Login: `POST /api/v1/auth/login`
+- Profile: `GET /api/v1/auth/profile`
+
+### Discord OAuth
+- Login: `GET /api/v1/auth/discord` (redirects to Discord)
+- Callback: `GET /auth/discord/callback` (handles Discord response)
+
+**Include JWT token in requests:**
+```
+Authorization: Bearer <your-jwt-token>
 ```
 
-## Deployment
+## 🤝 Contributing
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## 📝 License
 
-```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+This project is licensed under the MIT License.

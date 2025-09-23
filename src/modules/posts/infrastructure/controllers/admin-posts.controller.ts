@@ -9,6 +9,7 @@ import {
   Put,
   Query,
   Request,
+  UseGuards,
 } from '@nestjs/common';
 import type { Request as Req } from 'express';
 import { PostsService } from '../../application/services/posts.service';
@@ -27,12 +28,14 @@ import { PaginatedResponse } from '../../domain/repositories';
 import { PostDto } from '../../application/dtos/post.dto';
 import { PostMapper } from '../../application/mappers/post.mapper';
 import { idNumberSchema } from '../../application/validation/schemas/param.schemas';
+import { JwtAuthGuard } from '@src/common/guards/jwt-auth.guard';
 
 interface AppRequest extends Req {
   user?: { id: number };
   sessionID?: string; // si usas express-session
 }
 
+@UseGuards(JwtAuthGuard)
 @Controller('admin/posts')
 // @UseGuards(JwtAuthGuard) // Uncomment when auth is implemented
 export class AdminPostsController {
