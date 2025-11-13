@@ -1,0 +1,117 @@
+// =====================================================
+// TABLES
+// =====================================================
+model Post {
+  // Primary key and audit fields
+  id Int @id @default(autoincrement())
+
+  title   String @db.VarChar(255)
+  slug    String @unique @db.VarChar(255)
+  content String @db.Text
+
+  status      PostStatus @default(DRAFT)
+  publishedAt DateTime?  @map("published_at") @db.Timestamptz
+  scheduledAt DateTime?  @map("scheduled_at") @db.Timestamptz
+
+  authorId Int @map("author_id")
+
+  featuredImageUrl String? @map("featured_image_url") @db.VarChar(500)
+
+  // Content flags
+  isFeatured Boolean @default(true)
+
+  // Engagement metrics
+  viewsCount    Int @default(0) @map("views_count")
+  likesCount    Int @default(0) @map("likes_count")
+  commentsCount Int @default(0) @map("comments_count")
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz
+
+  postCategories PostCategory[]
+  postTags       PostTag[]
+  User           User?          @relation(fields: [userId], references: [id])
+  userId         Int?
+
+  // Indexes for performance
+  @@index([status, publishedAt(sort: Desc)], name: "idx_posts_status_published")
+  @@index([authorId], name: "idx_posts_author")
+  @@index([slug], name: "idx_posts_slug")
+  @@index([createdAt(sort: Desc)], name: "idx_posts_created")
+  @@index([viewsCount(sort: Desc)], name: "idx_posts_views")
+  @@map("posts")
+}
+
+model Category {
+  id Int @id @default(autoincrement())
+
+  name        String  @unique @db.VarChar(100)
+  slug        String  @unique @db.VarChar(100)
+  description String? @db.Text
+  color       String? @db.VarChar(7) // Hex color
+  isActive    Boolean @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  posts PostCategory[]
+
+  @@index([isActive], name: "idx_categories_active")
+  @@index([slug], name: "idx_categories_slug")
+  @@map("categories")
+}
+
+model Tag {
+  id Int @id @default(autoincrement())
+
+  name       String @unique @db.VarChar(50)
+  slug       String @unique @db.VarChar(50)
+  usageCount Int    @default(0) @map("usage_count")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  posts PostTag[]
+
+  @@index([usageCount(sort: Desc)], name: "idx_tags_usage")
+  @@index([slug], name: "idx_tags_slug")
+  @@map("tags")
+}
+
+model PostCategory {
+  postId     Int @map("post_id")
+  categoryId Int @map("category_id")
+
+  post     Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([postId, categoryId])
+  @@index([categoryId, postId], name: "idx_post_categories_category")
+  @@map("post_categories")
+}
+
+model PostTag {
+  postId Int @map("post_id")
+  tagId  Int @map("tag_id")
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
+  @@index([tagId, postId], name: "idx_post_tags_tag")
+  @@map("post_tags")
+}
+
+// =====================================================
+// ENUMS
+// =====================================================
+enum PostStatus {
+  DRAFT     @map("draft")
+  PUBLISHED @map("published")
+  ARCHIVED  @map("archived")
+  SCHEDULED @map("scheduled")
+
+  @@map("post_status")
+}

@@ -1,4 +1,4 @@
-import { PrismaClient, PostStatus } from '@prisma/client';
+import { PrismaClient, PostStatus, Category, Tag } from '@prisma/client';
 import { faker } from '@faker-js/faker';
 
 const prisma = new PrismaClient();
@@ -88,7 +88,7 @@ const seedCategories = async () => {
     { name: 'DevOps', color: '#10B981' },
   ];
 
-  const created: any = [];
+  const created: Category[] = [];
   for (const c of base) {
     const slug = slugify(c.name);
     const cat = await prisma.category.upsert({
@@ -96,8 +96,10 @@ const seedCategories = async () => {
       update: { name: c.name, color: c.color, isActive: true },
       create: { name: c.name, slug, color: c.color, isActive: true },
     });
+
     created.push(cat);
   }
+
   return created;
 };
 
@@ -125,7 +127,7 @@ const seedTags = async () => {
     'monitoring',
   ];
 
-  const created: any = [];
+  const created: Tag[] = [];
   for (const name of base) {
     const slug = slugify(name);
     const tag = await prisma.tag.upsert({
@@ -133,8 +135,10 @@ const seedTags = async () => {
       update: { name, usageCount: 0 },
       create: { name, slug, usageCount: 0 },
     });
+
     created.push(tag);
   }
+
   return created;
 };
 
@@ -261,6 +265,6 @@ main()
     console.error('❌ Seed failed:', e);
     process.exit(1);
   })
-  .finally(async () => {
-    await prisma.$disconnect();
+  .finally(() => {
+    void prisma.$disconnect();
   });
